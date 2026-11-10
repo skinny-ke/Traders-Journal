@@ -164,3 +164,17 @@ export async function clearTrades() {
   clearTradeRecords();
   await clearAllScreenshots();
 }
+
+// Recycle Bin operations require Supabase cloud mode
+export async function getDeletedTrades() {
+  throw new Error("Recycle Bin is only available when signed in to Supabase.");
+}
+export async function restoreTrade() {
+  throw new Error("Restore is only available when signed in to Supabase.");
+}
+export async function permanentlyDeleteTrade() {
+  throw new Error("Permanent delete is only available when signed in to Supabase.");
+}
+export async function emptyRecycleBin() {
+  throw new Error("Empty Recycle Bin is only available when signed in to Supabase.");
+}

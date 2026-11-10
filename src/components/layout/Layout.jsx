@@ -50,6 +50,7 @@ function pageTitle(path) {
     "/trades": "Trade History",
     "/add-trade": "Add Trade",
     "/settings": "Account Settings",
+    "/recycle-bin": "Recycle Bin",
   };
   return titles[path] || "Trade Journal";
 }

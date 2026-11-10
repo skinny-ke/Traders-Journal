@@ -14,6 +14,7 @@ import LoginPage from "./pages/Login";
 import ForgotPasswordPage from "./pages/ForgotPassword";
 import ResetPasswordPage from "./pages/ResetPassword";
 import SettingsPage from "./pages/Settings";
+import RecycleBinPage from "./pages/RecycleBinPage";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
               <Route path="/trades/:id/edit" element={<EditTradePage />} />
               <Route path="/add-trade" element={<AddTradePage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/recycle-bin" element={<RecycleBinPage />} />
             </Route>
           </Routes>
         </AuthProvider>

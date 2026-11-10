@@ -67,7 +67,7 @@ export default function TradeTable({ trades, onView, onEdit, onDelete, showActio
                   <button type="button" onClick={() => onEdit?.(trade.id)} className="p-2 text-tj-muted hover:text-tj-accent rounded-md hover:bg-tj-surface" aria-label={`Edit ${trade.instrument} trade`}>
                     <Edit size={16} />
                   </button>
-                  <button type="button" onClick={() => setDeleteConfirm(trade)} className="p-2 text-tj-muted hover:text-tj-loss rounded-md hover:bg-tj-surface" aria-label={`Delete ${trade.instrument} trade`}>
+                  <button type="button" onClick={() => setDeleteConfirm(trade)} className="p-2 text-tj-muted hover:text-tj-loss rounded-md hover:bg-tj-surface" aria-label={`Move ${trade.instrument} trade to recycle bin`}>
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -147,7 +147,7 @@ export default function TradeTable({ trades, onView, onEdit, onDelete, showActio
                           type="button"
                           onClick={() => setDeleteConfirm(trade)}
                           className="p-2 text-tj-muted hover:text-tj-loss rounded-md hover:bg-tj-surface"
-                          aria-label={`Delete ${trade.instrument} trade`}
+                          aria-label={`Move ${trade.instrument} trade to recycle bin`}
                         >
                           <Trash2 size={16} />
                         </button>

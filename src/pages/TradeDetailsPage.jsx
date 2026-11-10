@@ -98,7 +98,7 @@ export default function TradeDetailsPage() {
     setDeleting(true);
     try {
       await removeTrade(trade.id);
-      success("Trade deleted.", 3000);
+      success("Trade moved to Recycle Bin.", 3000);
       navigate("/trades");
     } catch (err) {
       showError(err?.message || "Failed to delete trade.", 4000);
@@ -188,7 +188,7 @@ export default function TradeDetailsPage() {
           </button>
           <button type="button" onClick={() => setConfirmOpen(true)} className="btn-danger px-4 py-2.5">
             <Trash2 size={16} />
-            Delete Trade
+            Move to Bin
           </button>
         </div>
       </div>

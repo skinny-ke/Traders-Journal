@@ -6,7 +6,7 @@ import { groupTradesByDate, sortTradesNewestFirst } from "../lib/tradeStats.js";
 import { deleteScreenshot, uploadScreenshot } from "./screenshotService.js";
 
 const TRADE_COLUMNS =
-  "id, user_id, trade_date, trade_time, instrument, direction, entry_price, exit_price, quantity, profit_loss, result, screenshot_path, notes, created_at, updated_at";
+  "id, user_id, trade_date, trade_time, instrument, direction, entry_price, exit_price, quantity, profit_loss, result, screenshot_path, notes, created_at, updated_at, deleted_at";
 
 function requireClient() {
   if (!supabase) {
@@ -48,7 +48,7 @@ export async function getTrades(filters = {}) {
   const client = requireClient();
   await requireUserId();
 
-  let query = client.from("trades").select(TRADE_COLUMNS);
+  let query = client.from("trades").select(TRADE_COLUMNS).is("deleted_at", null);
   query = applyFilters(query, filters);
 
   if (filters.sortBy === "pnl") {
@@ -67,6 +67,15 @@ export async function getTrades(filters = {}) {
 }
 
 export async function getTradeById(id) {
+  const client = requireClient();
+  await requireUserId();
+
+  const { data, error } = await client.from("trades").select(TRADE_COLUMNS).eq("id", id).is("deleted_at", null).maybeSingle();
+  if (error) throwQueryError(error, "Failed to retrieve the trade.");
+  return data ? mapRowToTrade(data) : null;
+}
+
+async function getTradeByIdIncludeDeleted(id) {
   const client = requireClient();
   await requireUserId();
 
@@ -202,28 +211,19 @@ export async function updateTrade(id, input, screenshotFile) {
 }
 
 export async function deleteTrade(id) {
-  const existing = await getTradeById(id);
+  const existing = await getTradeByIdIncludeDeleted(id);
   if (!existing) {
     throw new AppError("Trade not found.", { code: "NOT_FOUND" });
   }
 
   const client = requireClient();
-  const { error } = await client.from("trades").delete().eq("id", id);
-  if (error) throwQueryError(error, "Failed to delete the trade.");
+  const { error } = await client
+    .from("trades")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throwQueryError(error, "Failed to move trade to Recycle Bin.");
 
-  const path = screenshotStoragePath(existing.screenshot);
-  if (path) {
-    try {
-      await deleteScreenshot(path);
-    } catch (cleanupError) {
-      logDiagnostic("deleteTrade.screenshot", cleanupError);
-      throw new AppError("The trade was deleted, but its screenshot could not be removed.", {
-        code: "PARTIAL_DELETE",
-        cause: cleanupError,
-      });
-    }
-  }
-
+  // Do NOT delete screenshot — trade is soft-deleted, screenshot is preserved for restore
   return existing;
 }
 
@@ -238,4 +238,87 @@ export async function getTradesByDateRange(startDate, endDate) {
 
 export async function clearTrades() {
   throw new AppError("Clearing all cloud trades is not available in this stage.", { code: "NOT_ALLOWED" });
+}
+
+export async function getDeletedTrades() {
+  const client = requireClient();
+  await requireUserId();
+
+  const { data, error } = await client
+    .from("trades")
+    .select(TRADE_COLUMNS)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+  if (error) throwQueryError(error, "Failed to retrieve deleted trades.");
+  return (data || []).map(mapRowToTrade);
+}
+
+export async function restoreTrade(id) {
+  const client = requireClient();
+  await requireUserId();
+
+  const { data, error } = await client
+    .from("trades")
+    .update({ deleted_at: null })
+    .eq("id", id)
+    .select(TRADE_COLUMNS)
+    .single();
+  if (error) throwQueryError(error, "Failed to restore trade.");
+  return mapRowToTrade(data);
+}
+
+export async function permanentlyDeleteTrade(id) {
+  const existing = await getTradeByIdIncludeDeleted(id);
+  if (!existing) throw new AppError("Trade not found.", { code: "NOT_FOUND" });
+
+  const client = requireClient();
+  const { error } = await client.from("trades").delete().eq("id", id);
+  if (error) throwQueryError(error, "Failed to permanently delete the trade.");
+
+  // Clean up screenshot safely — non-fatal
+  const path = screenshotStoragePath(existing.screenshot);
+  if (path) {
+    try {
+      await deleteScreenshot(path);
+    } catch (e) {
+      logDiagnostic("permanentlyDeleteTrade.screenshot", e);
+    }
+  }
+
+  return existing;
+}
+
+export async function emptyRecycleBin() {
+  const client = requireClient();
+  const userId = await requireUserId();
+
+  // Fetch all deleted trades first so we can clean up screenshots
+  const { data, error } = await client
+    .from("trades")
+    .select(TRADE_COLUMNS)
+    .not("deleted_at", "is", null);
+  if (error) throwQueryError(error, "Failed to retrieve deleted trades.");
+  const deleted = (data || []).map(mapRowToTrade);
+
+  // Hard-delete all soft-deleted records for this user
+  const { error: delError } = await client
+    .from("trades")
+    .delete()
+    .not("deleted_at", "is", null)
+    .eq("user_id", userId);
+  if (delError) throwQueryError(delError, "Failed to empty Recycle Bin.");
+
+  // Clean up screenshots safely — non-fatal
+  for (const trade of deleted) {
+    const path = screenshotStoragePath(trade.screenshot);
+    if (path) {
+      try {
+        await deleteScreenshot(path);
+      } catch (e) {
+        logDiagnostic("emptyRecycleBin.screenshot", e);
+      }
+    }
+  }
+
+  return deleted.length;
 }

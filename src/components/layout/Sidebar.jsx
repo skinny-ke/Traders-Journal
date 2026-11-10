@@ -9,6 +9,7 @@ import {
   LayoutList,
   LogOut,
   Download,
+  Trash2,
 } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import ThemeSwitcher from "../ui/ThemeSwitcher.jsx";
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { path: "/calendar", label: "Calendar", icon: Calendar },
   { path: "/trades", label: "Trade History", icon: List },
   { path: "/add-trade", label: "Add Trade", icon: Plus },
+  { path: "/recycle-bin", label: "Recycle Bin", icon: Trash2 },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {

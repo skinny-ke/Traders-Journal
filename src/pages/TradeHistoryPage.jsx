@@ -83,7 +83,7 @@ export default function TradeHistoryPage() {
   const handleDelete = async (id) => {
     try {
       await removeTrade(id);
-      success("Trade deleted successfully.", 3000);
+      success("Trade moved to Recycle Bin.", 3000);
     } catch (err) {
       showError(toUserError(err, "Failed to delete trade."), 4000);
       throw err;

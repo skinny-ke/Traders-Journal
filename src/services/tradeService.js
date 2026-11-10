@@ -79,6 +79,30 @@ export async function clearTrades() {
   return source.clearTrades();
 }
 
+export async function getDeletedTrades() {
+  const source = await getSource();
+  if (!source.getDeletedTrades) throw new Error("Recycle Bin is only available when signed in to Supabase.");
+  return source.getDeletedTrades();
+}
+
+export async function restoreTrade(id) {
+  const source = await getSource();
+  if (!source.restoreTrade) throw new Error("Restore is only available when signed in to Supabase.");
+  return source.restoreTrade(id);
+}
+
+export async function permanentlyDeleteTrade(id) {
+  const source = await getSource();
+  if (!source.permanentlyDeleteTrade) throw new Error("Permanent delete is only available when signed in to Supabase.");
+  return source.permanentlyDeleteTrade(id);
+}
+
+export async function emptyRecycleBin() {
+  const source = await getSource();
+  if (!source.emptyRecycleBin) throw new Error("Empty Recycle Bin is only available when signed in to Supabase.");
+  return source.emptyRecycleBin();
+}
+
 export async function getTradesGroupedByDate(startDate, endDate) {
   const trades = startDate && endDate
     ? await getTradesByDateRange(startDate, endDate)

@@ -41,6 +41,7 @@ export function mapRowToTrade(row) {
     notes: row.notes ? String(row.notes) : "",
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null,
+    deletedAt: row.deleted_at || null,
   });
 }
 
