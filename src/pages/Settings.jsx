@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { LogOut, Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { LogOut, Lock, ShieldCheck, Eye, EyeOff, Download, Smartphone, CheckCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth.js";
 import { useToast } from "../context/ToastContext.jsx";
+import { usePWA } from "../hooks/usePWA.js";
 import LoadingState from "../components/ui/LoadingState.jsx";
+import IOSInstallModal from "../components/pwa/IOSInstallModal.jsx";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -11,6 +13,8 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { user, session, updatePassword, signOut, isAuthenticated, loading } = useAuth();
   const { success, error: showError } = useToast();
+  const { canInstall, isInstalled, isStandalone, isIOS, dismissed, installApp, clearDismissed } =
+    usePWA();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,8 +23,13 @@ export default function SettingsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
+  const [installing, setInstalling] = useState(false);
+  const [showIOSModal, setShowIOSModal] = useState(false);
+
   if (loading) return <LoadingState message="Loading account…" />;
   if (!isAuthenticated) return <LoadingState message="Checking your session…" />;
+
+  const appIsInstalled = isInstalled || isStandalone;
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -63,6 +72,16 @@ export default function SettingsPage() {
     }
   };
 
+  const handleInstall = async () => {
+    if (isIOS) {
+      setShowIOSModal(true);
+      return;
+    }
+    setInstalling(true);
+    await installApp();
+    setInstalling(false);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -70,6 +89,7 @@ export default function SettingsPage() {
         <p className="text-tj-secondary text-sm mt-1">Manage your Trade Journal account.</p>
       </div>
 
+      {/* ── Account info ─────────────────────────────────────────────── */}
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-5">
           <ShieldCheck size={20} className="text-tj-accent" />
@@ -95,6 +115,101 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* ── Install App ───────────────────────────────────────────────── */}
+      <div className="card p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <Download size={20} className="text-tj-accent" />
+          <h2 className="text-xs font-semibold text-tj-muted uppercase tracking-wider">App</h2>
+        </div>
+
+        {appIsInstalled ? (
+          /* Already installed */
+          <div className="flex items-center gap-3">
+            <CheckCircle size={18} className="text-tj-win flex-shrink-0" />
+            <div>
+              <p className="text-tj-primary text-sm font-medium">Trade Journal is installed</p>
+              <p className="text-tj-secondary text-xs mt-0.5">
+                You're running the app from your Home Screen or app launcher.
+              </p>
+            </div>
+          </div>
+        ) : isIOS ? (
+          /* iOS — show instruction button */
+          <div className="space-y-4">
+            <p className="text-tj-secondary text-sm leading-relaxed">
+              Install Trade Journal on your Home Screen for quick access — no App Store needed.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowIOSModal(true)}
+              className="btn-primary w-full py-2.5"
+            >
+              <Smartphone size={16} />
+              How to Install on iPhone / iPad
+            </button>
+          </div>
+        ) : canInstall ? (
+          /* Chromium / Android / Desktop — native install */
+          <div className="space-y-4">
+            <p className="text-tj-secondary text-sm leading-relaxed">
+              Install Trade Journal as an app for faster access and offline support. No App Store
+              required.
+            </p>
+            <button
+              type="button"
+              onClick={handleInstall}
+              disabled={installing}
+              className="btn-primary w-full py-2.5"
+            >
+              {installing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Installing…</span>
+                </>
+              ) : (
+                <>
+                  <Download size={16} />
+                  <span>Install App</span>
+                </>
+              )}
+            </button>
+            {dismissed && (
+              <p className="text-xs text-tj-muted text-center">
+                Previously dismissed the banner?{" "}
+                <button
+                  type="button"
+                  onClick={clearDismissed}
+                  className="text-tj-accent underline underline-offset-2 hover:no-underline"
+                >
+                  Show it again
+                </button>
+              </p>
+            )}
+          </div>
+        ) : (
+          /* Not eligible / already installed via other means */
+          <div className="space-y-3">
+            <p className="text-tj-secondary text-sm leading-relaxed">
+              To install Trade Journal, open it in a supported browser (Chrome, Edge, or Safari on
+              iOS) and use the browser's install option.
+            </p>
+            {dismissed && (
+              <p className="text-xs text-tj-muted">
+                Dismissed the install banner?{" "}
+                <button
+                  type="button"
+                  onClick={clearDismissed}
+                  className="text-tj-accent underline underline-offset-2 hover:no-underline"
+                >
+                  Show it again
+                </button>
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Change password ───────────────────────────────────────────── */}
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-5">
           <Lock size={20} className="text-tj-accent" />
@@ -154,7 +269,7 @@ export default function SettingsPage() {
           <button type="submit" disabled={submitting} className="btn-primary w-full py-2.5">
             {submitting ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Updating…</span>
               </>
             ) : (
@@ -167,6 +282,7 @@ export default function SettingsPage() {
         </form>
       </div>
 
+      {/* ── Sign out ──────────────────────────────────────────────────── */}
       <div className="card p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -179,6 +295,9 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* iOS modal */}
+      {showIOSModal && <IOSInstallModal onClose={() => setShowIOSModal(false)} />}
     </div>
   );
 }

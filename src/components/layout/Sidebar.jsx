@@ -8,10 +8,12 @@ import {
   X,
   LayoutList,
   LogOut,
+  Download,
 } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import ThemeSwitcher from "../ui/ThemeSwitcher.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
+import { usePWA } from "../../hooks/usePWA.js";
 
 const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,6 +26,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, isAuthenticated, loading } = useAuth();
+  const { canInstall, isInstalled, isStandalone, isIOS } = usePWA();
 
   const isActive = (path) =>
     path === "/trades"
@@ -98,7 +101,23 @@ export default function Sidebar({ isOpen, onClose }) {
           })}
         </nav>
 
-        <div className="px-4 pb-4 border-t border-tj-medium">
+        <div className="px-4 pb-4 border-t border-tj-medium space-y-2 pt-3">
+          {/* Install App — visible when browser supports installation and app
+              is not already running in standalone mode. Navigates to Settings
+              where the full install card lives. */}
+          {(canInstall || isIOS) && !isInstalled && !isStandalone && (
+            <button
+              type="button"
+              onClick={() => {
+                navigate("/settings");
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-fast text-tj-accent hover:bg-tj-accent-soft"
+            >
+              <Download size={16} className="flex-shrink-0" />
+              Install App
+            </button>
+          )}
           <Button variant="outline" className="w-full" type="button" onClick={() => navigate("/settings")}>
             <LayoutList size={16} className="mr-2" />
             Settings
