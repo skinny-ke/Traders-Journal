@@ -65,10 +65,17 @@ export default function Sidebar({ isOpen, onClose }) {
         `}
         aria-label="Main navigation"
       >
-        <div className="flex items-center justify-between h-16 px-5 border-b border-tj-medium">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight text-tj-primary">TJ</span>
-            <span className="text-sm font-semibold text-tj-primary">Trade Journal</span>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-tj-medium">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/icon-192.png"
+              alt="Trade Journal Logo"
+              className="w-8 h-8 rounded-lg object-contain shadow-sm border border-tj-light/40"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="text-sm font-bold text-tj-primary tracking-tight">Trade Journal</span>
+              <span className="text-[10px] text-tj-muted font-medium mt-0.5">Trader's Log</span>
+            </div>
           </div>
           <button className="text-tj-muted hover:text-tj-primary lg:hidden" onClick={onClose} type="button" aria-label="Close menu">
             <X size={20} />
@@ -155,15 +162,22 @@ export function MobileHeader({ title, onMenu }) {
   return (
     <header className="fixed top-0 left-0 right-0 z-30 h-14 border-b border-tj-medium bg-tj-bg-primary/95 backdrop-blur-lg lg:hidden">
       <div className="flex items-center justify-between h-full px-4">
-        <button
-          className="flex items-center justify-center w-10 h-10 rounded-lg text-tj-primary hover:bg-tj-surface transition-colors duration-fast"
-          onClick={onMenu}
-          type="button"
-          aria-label="Open menu"
-        >
-          <Menu size={20} />
-        </button>
-        <span className="text-sm font-semibold text-tj-primary truncate px-2">{title}</span>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-tj-primary hover:bg-tj-surface transition-colors duration-fast shrink-0"
+            onClick={onMenu}
+            type="button"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+          <img
+            src="/icon-192.png"
+            alt="Trade Journal"
+            className="w-6 h-6 rounded-md object-contain shrink-0"
+          />
+          <span className="text-sm font-semibold text-tj-primary truncate">{title}</span>
+        </div>
         <ThemeSwitcher />
       </div>
     </header>

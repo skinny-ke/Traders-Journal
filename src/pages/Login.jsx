@@ -53,9 +53,13 @@ export default function LoginPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 pb-12">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="text-2xl font-bold tracking-tight text-tj-primary">TJ</span>
-            <span className="text-lg font-semibold text-tj-primary">Trade Journal</span>
+          <div className="flex flex-col items-center justify-center mb-5">
+            <img
+              src="/icon-192.png"
+              alt="Trade Journal Logo"
+              className="w-16 h-16 rounded-2xl shadow-lg border border-tj-light/40 mb-3 object-contain"
+            />
+            <span className="text-base font-bold text-tj-primary tracking-tight">Trade Journal</span>
           </div>
           <h1 className="text-3xl font-bold text-tj-primary tracking-tight">Welcome back</h1>
           <p className="text-tj-secondary text-sm">Sign in to access your trading journal.</p>
